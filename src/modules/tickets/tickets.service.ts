@@ -21,10 +21,11 @@ import {
   UserRole,
   EventType,
 } from '@prisma/client';
+import { MessagesGateway } from '../messages/messages/messages.gateway';
 
 @Injectable()
 export class TicketsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private message: MessagesGateway) {}
 
   async create(clientId: string, dto: CreateTicketDto) {
     // 1. Генерируем уникальный номер заявки

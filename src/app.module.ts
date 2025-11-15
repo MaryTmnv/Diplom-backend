@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { UsersModule } from './modules/users/users.module';
 import { TicketsModule } from './modules/tickets/tickets.module';
+import { MessagesModule } from './modules/messages/messages.module';
 
 @Module({
   imports: [
@@ -33,6 +34,8 @@ import { TicketsModule } from './modules/tickets/tickets.module';
     UsersModule,
 
     TicketsModule,
+
+    MessagesModule,
   ],
   providers: [
     // Глобальные Guards
