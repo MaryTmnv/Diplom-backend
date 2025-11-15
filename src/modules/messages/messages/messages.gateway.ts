@@ -223,7 +223,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   notifyTicketUpdated(ticketId: string, data: any) {
     this.server.to(`ticket-${ticketId}`).emit('ticket-updated', data);
   }
-
+  
   private extractToken(client: Socket): string | null {
     // Токен может быть передан через:
     // 1. Handshake auth
@@ -242,4 +242,5 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     return null;
   }
+  
 }

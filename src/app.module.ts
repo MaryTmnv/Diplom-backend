@@ -8,6 +8,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { UsersModule } from './modules/users/users.module';
 import { TicketsModule } from './modules/tickets/tickets.module';
 import { MessagesModule } from './modules/messages/messages.module';
+import { FilesModule } from './modules/files/files.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -36,6 +38,10 @@ import { MessagesModule } from './modules/messages/messages.module';
     TicketsModule,
 
     MessagesModule,
+
+    FilesModule,
+
+    NotificationsModule,
   ],
   providers: [
     // Глобальные Guards

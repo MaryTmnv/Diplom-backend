@@ -22,10 +22,17 @@ import {
   EventType,
 } from '@prisma/client';
 import { MessagesGateway } from '../messages/messages/messages.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications/notifications.gateway';
 
 @Injectable()
 export class TicketsService {
-  constructor(private prisma: PrismaService, private message: MessagesGateway) {}
+  constructor(
+    private prisma: PrismaService, 
+    private messagesGateway: MessagesGateway,
+    private notificationsService: NotificationsService,
+    private notificationsGateway: NotificationsGateway
+  ) {}
 
   async create(clientId: string, dto: CreateTicketDto) {
     // 1. Генерируем уникальный номер заявки
@@ -77,10 +84,13 @@ export class TicketsService {
       data: { totalTickets: { increment: 1 } },
     });
 
-    // 5. Автоматическое назначение (если настроено)
-    // await this.autoAssignTicket(ticket.id);
-
-    // TODO: Отправить уведомления операторам о новой заявке
+    // Отправляем уведомления операторам
+    const notifications = await this.notificationsService.notifyTicketCreated(ticket);
+    
+    // Отправляем через WebSocket
+    notifications.forEach(({ userId, notification }) => {
+      this.notificationsGateway.sendNotification(userId, notification);
+    });
 
     return ticket;
   }
@@ -338,7 +348,20 @@ export class TicketsService {
       },
     });
 
-    // TODO: Отправить уведомление оператору
+    const notification = await this.notificationsService.notifyTicketAssigned(ticket);
+    if (notification) {
+      this.notificationsGateway.sendNotification(ticket.operatorId, notification);
+    }
+    // Обновляем счётчик непрочитанных
+    const unreadCount = await this.notificationsService.getUnreadCount(ticket.operatorId);
+    this.notificationsGateway.updateUnreadCount(ticket.operatorId, unreadCount);
+
+    // Уведомляем через WebSocket о назначении
+    this.messagesGateway.notifyTicketUpdated(ticketId, {
+      type: 'assigned',
+      ticket,
+    });
+
 
     return ticket;
   }
@@ -355,6 +378,8 @@ export class TicketsService {
     if (!ticket) {
       throw new NotFoundException('Заявка не найдена');
     }
+
+    const oldStatus = ticket.status;
 
     const updateData: any = {
       status: dto.status,
@@ -399,7 +424,28 @@ export class TicketsService {
       },
     });
 
-    // TODO: Отправить уведомления
+    // Отправляем уведомление клиенту
+    if (dto.status === TicketStatus.RESOLVED) {
+      const notification = await this.notificationsService.notifyTicketResolved(updatedTicket);
+      this.notificationsGateway.sendNotification(ticket.clientId, notification);
+    } else {
+      const notification = await this.notificationsService.notifyTicketStatusChanged(
+        updatedTicket,
+        oldStatus,
+      );
+      this.notificationsGateway.sendNotification(ticket.clientId, notification);
+    }
+
+    // Обновляем счётчик
+    const unreadCount = await this.notificationsService.getUnreadCount(ticket.clientId);
+    this.notificationsGateway.updateUnreadCount(ticket.clientId, unreadCount);
+
+    // WebSocket уведомление об обновлении заявки
+    this.messagesGateway.notifyTicketUpdated(ticketId, {
+      type: 'status-changed',
+      ticket: updatedTicket,
+    });
+
 
     return updatedTicket;
   }

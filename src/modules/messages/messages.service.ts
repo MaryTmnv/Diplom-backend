@@ -7,10 +7,17 @@ import {
 import { PrismaService } from '../database/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UserRole, EventType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationsGateway } from '../notifications/notifications/notifications.gateway';
 
 @Injectable()
 export class MessagesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+     private notificationsService: NotificationsService,
+    private notificationsGateway: NotificationsGateway
+
+  ) {}
 
   async create(ticketId: string, authorId: string, role: UserRole, dto: CreateMessageDto) {
     // Проверяем, существует ли заявка
@@ -60,6 +67,25 @@ export class MessagesService {
         attachments: true,
       },
     });
+
+    const recipientId =
+      authorId === ticket.clientId ? ticket.operatorId : ticket.clientId;
+
+    // Отправляем уведомление получателю (если сообщение не внутреннее)
+    if (recipientId && !dto.isInternal) {
+      const notification = await this.notificationsService.notifyNewMessage(
+        recipientId,
+        ticket,
+        message,
+      );
+
+      // Отправляем через WebSocket
+      this.notificationsGateway.sendNotification(recipientId, notification);
+
+      // Обновляем счётчик
+      const unreadCount = await this.notificationsService.getUnreadCount(recipientId);
+      this.notificationsGateway.updateUnreadCount(recipientId, unreadCount);
+    }
 
     // Обновляем timestamp заявки
     await this.prisma.ticket.update({
