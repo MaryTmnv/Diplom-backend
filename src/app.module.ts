@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './modules/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -27,6 +28,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
     // Auth
     AuthModule,
+
+    UsersModule,
   ],
   providers: [
     // Глобальные Guards
