@@ -1,15 +1,393 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  CLIENT
+  OPERATOR
+  SPECIALIST
+  MANAGER
+  ADMIN
+}
+
+enum TicketStatus {
+  NEW
+  IN_PROGRESS
+  WAITING
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketCategory {
+  CARDS
+  DEPOSITS
+  LOANS
+  MOBILE_APP
+  PAYMENTS
+  SECURITY
+  OTHER
+}
+
+enum ArticleCategory {
+  CARDS
+  DEPOSITS
+  LOANS
+  MOBILE_APP
+  SECURITY
+}
+
+enum NotificationType {
+  TICKET_CREATED
+  TICKET_UPDATED
+  TICKET_ASSIGNED
+  TICKET_RESOLVED
+  NEW_MESSAGE
+  MENTION
+}
+
+enum EventType {
+  CREATED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  ASSIGNED
+  REASSIGNED
+  ESCALATED
+  MESSAGE_SENT
+  NOTE_ADDED
+  RESOLVED
+  CLOSED
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  avatar    String?
+  role      UserRole @default(CLIENT)
+  isActive  Boolean  @default(true)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Связи
+  clientTickets    Ticket[]       @relation("ClientTickets")
+  operatorTickets  Ticket[]       @relation("OperatorTickets")
+  messages         Message[]
+  internalNotes    InternalNote[]
+  notifications    Notification[]
+  ticketEvents     TicketEvent[]
+  ratings          TicketRating[]
+  articleRatings   ArticleRating[]
+  
+  // Дополнительные данные для клиентов
+  clientProfile    ClientProfile?
+  
+  // Статистика для операторов
+  operatorStats    OperatorStats?
+  
+  @@map("users")
+}
+
+model ClientProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  isVip           Boolean  @default(false)
+  registeredAt    DateTime @default(now())
+  totalTickets    Int      @default(0)
+  resolvedTickets Int      @default(0)
+  
+  deviceInfo      Json?
+  preferences     Json?
+  
+  @@map("client_profiles")
+}
+
+model OperatorStats {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  totalResolved         Int      @default(0)
+  averageResolutionTime Int      @default(0)
+  averageRating         Float    @default(0)
+  totalRatings          Int      @default(0)
+  
+  updatedAt             DateTime @updatedAt
+  
+  @@map("operator_stats")
+}
+
+model Ticket {
+  id          String         @id @default(uuid())
+  number      String         @unique
+  title       String
+  description String
+  status      TicketStatus   @default(NEW)
+  priority    TicketPriority @default(MEDIUM)
+  category    TicketCategory
+  
+  clientId    String
+  client      User           @relation("ClientTickets", fields: [clientId], references: [id])
+  
+  operatorId  String?
+  operator    User?          @relation("OperatorTickets", fields: [operatorId], references: [id])
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  assignedAt  DateTime?
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  
+  contextData Json?
+  
+  messages       Message[]
+  internalNotes  InternalNote[]
+  attachments    Attachment[]
+  events         TicketEvent[]
+  rating         TicketRating?
+  
+  @@index([clientId])
+  @@index([operatorId])
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([createdAt])
+  @@map("tickets")
+}
+model Message {
+  id         String   @id @default(uuid())
+  ticketId   String
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  
+  content    String
+  isInternal Boolean  @default(false)
+  
+  createdAt  DateTime @default(now())
+  readAt     DateTime?
+  
+  attachments Attachment[]
+  
+  @@index([ticketId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model InternalNote {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  content   String
+  createdAt DateTime @default(now())
+  
+  @@index([ticketId])
+  @@map("internal_notes")
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  fileName  String
+  fileSize  Int
+  mimeType  String
+  path      String
+  url       String
+  
+  ticketId  String?
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  messageId String?
+  message   Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([ticketId])
+  @@index([messageId])
+  @@map("attachments")
+}
+
+model TicketEvent {
+  id          String    @id @default(uuid())
+  ticketId    String
+  ticket      Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  type        EventType
+  description String
+  
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  metadata    Json?
+  
+  createdAt   DateTime  @default(now())
+  
+  @@index([ticketId])
+  @@index([createdAt])
+  @@map("ticket_events")
+}
+
+model TicketRating {
+  id              String   @id @default(uuid())
+  ticketId        String   @unique
+  ticket          Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  clientId        String
+  client          User     @relation(fields: [clientId], references: [id])
+  
+  rating          Int
+  feedback        String?
+  
+  likedSpeed      Boolean  @default(false)
+  likedClarity    Boolean  @default(false)
+  likedPoliteness Boolean  @default(false)
+  likedCompleteness Boolean @default(false)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([ticketId])
+  @@map("ticket_ratings")
+}
+
+model Article {
+  id              String          @id @default(uuid())
+  title           String
+  slug            String          @unique
+  excerpt         String
+  content         String
+  category        ArticleCategory
+  
+  views           Int             @default(0)
+  helpfulCount    Int             @default(0)
+  notHelpfulCount Int             @default(0)
+  
+  readingTime     Int
+  
+  isPublished     Boolean         @default(true)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  ratings         ArticleRating[]
+  relatedArticles ArticleRelation[] @relation("ArticleRelations")
+  relatedTo       ArticleRelation[] @relation("RelatedArticles")
+  
+  @@index([category])
+  @@index([slug])
+  @@map("articles")
+}
+
+model ArticleRating {
+  id        String   @id @default(uuid())
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  helpful   Boolean
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([articleId, userId])
+  @@index([articleId])
+  @@map("article_ratings")
+}
+
+model ArticleRelation {
+  id              String  @id @default(uuid())
+  articleId       String
+  article         Article @relation("ArticleRelations", fields: [articleId], references: [id], onDelete: Cascade)
+  
+  relatedArticleId String
+  relatedArticle   Article @relation("RelatedArticles", fields: [relatedArticleId], references: [id], onDelete: Cascade)
+  
+  @@unique([articleId, relatedArticleId])
+  @@map("article_relations")
+}
+
+model Template {
+  id          String         @id @default(uuid())
+  title       String
+  content     String
+  category    TicketCategory
+  
+  usageCount  Int            @default(0)
+  rating      Float          @default(0)
+  
+  variables   String[]
+  
+  isActive    Boolean        @default(true)
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  @@index([category])
+  @@map("templates")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type      NotificationType
+  title     String
+  message   String
+  
+  entityId  String?
+  entityType String?
+  
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  
+  createdAt DateTime         @default(now())
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
 }
