@@ -6,6 +6,7 @@ import { DatabaseModule } from './modules/database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { UsersModule } from './modules/users/users.module';
+import { TicketsModule } from './modules/tickets/tickets.module';
 
 @Module({
   imports: [
@@ -30,6 +31,8 @@ import { UsersModule } from './modules/users/users.module';
     AuthModule,
 
     UsersModule,
+
+    TicketsModule,
   ],
   providers: [
     // Глобальные Guards
