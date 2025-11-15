@@ -10,6 +10,7 @@ import { TicketsModule } from './modules/tickets/tickets.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { FilesModule } from './modules/files/files.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
 
 @Module({
   imports: [
@@ -42,6 +43,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     FilesModule,
 
     NotificationsModule,
+
+    KnowledgeBaseModule,
   ],
   providers: [
     // Глобальные Guards
