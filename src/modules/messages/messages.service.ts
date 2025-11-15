@@ -3,6 +3,8 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -14,9 +16,10 @@ import { NotificationsGateway } from '../notifications/notifications/notificatio
 export class MessagesService {
   constructor(
     private prisma: PrismaService,
-     private notificationsService: NotificationsService,
-    private notificationsGateway: NotificationsGateway
-
+    @Inject(forwardRef(() => NotificationsService))
+    private notificationsService: NotificationsService,
+    @Inject(forwardRef(() => NotificationsGateway))
+    private notificationsGateway: NotificationsGateway,
   ) {}
 
   async create(ticketId: string, authorId: string, role: UserRole, dto: CreateMessageDto) {
