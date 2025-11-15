@@ -11,6 +11,7 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { FilesModule } from './modules/files/files.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.module';
+import { TemplatesModule } from './modules/templates/templates.module';
 
 @Module({
   imports: [
@@ -45,6 +46,8 @@ import { KnowledgeBaseModule } from './modules/knowledge-base/knowledge-base.mod
     NotificationsModule,
 
     KnowledgeBaseModule,
+
+    TemplatesModule,
   ],
   providers: [
     // Глобальные Guards
