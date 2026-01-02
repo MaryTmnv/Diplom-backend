@@ -41,6 +41,7 @@ async function bootstrap() {
   );
 
   // Swagger
+  if (process.env.NODE_ENV !== 'production') {
   const config = new DocumentBuilder()
     .setTitle('HelpMate API')
     .setDescription('API документация для системы HelpMate')
@@ -55,7 +56,7 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
-
+  }
   // Graceful shutdown
   app.enableShutdownHooks();
 
