@@ -1,4 +1,3 @@
-// prisma/seed.ts
 import { PrismaClient, UserRole, ArticleCategory, TicketCategory } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 

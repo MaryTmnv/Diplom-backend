@@ -1,4 +1,3 @@
-// src/modules/tickets/entities/ticket.entity.ts
 import { ApiProperty } from '@nestjs/swagger';
 import { TicketStatus, TicketPriority, TicketCategory } from '@prisma/client';
 
