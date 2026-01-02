@@ -17,14 +17,30 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prisma:generate": "dotenv -e .env -- prisma generate",
-    "prisma:migrate": "dotenv -e .env -- prisma migrate dev",
-    "prisma:studio": "dotenv -e .env -- prisma studio",
-    "prisma:seed": "dotenv -e .env -- ts-node prisma/seed.ts",
+    
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "ts-node prisma/seed.ts",
+    
+    "prisma:generate:local": "dotenv -e .env -- prisma generate",
+    "prisma:migrate:local": "dotenv -e .env -- prisma migrate dev",
+    "prisma:studio:local": "dotenv -e .env -- prisma studio",
+    "prisma:seed:local": "dotenv -e .env -- ts-node prisma/seed.ts",
+    
+    "prisma:generate:prod": "dotenv -e .env.production -- prisma generate",
+    "prisma:migrate:prod": "dotenv -e .env.production -- prisma migrate deploy",
+    "prisma:studio:prod": "dotenv -e .env.production -- prisma studio",
+    "prisma:seed:prod": "dotenv -e .env.production -- ts-node prisma/seed.ts",
+    
     "docker:dev": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f backend",
-    "docker:rebuild": "docker-compose up -d --build"
+    "docker:rebuild": "docker-compose up -d --build",
+    
+    "postinstall": "prisma generate",
+    "prebuild": "prisma generate"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
