@@ -14,7 +14,7 @@ import { NotificationsService } from '../notifications.service';
 @WebSocketGateway({
   namespace: 'notifications',
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || 'https://help-mate-3j1hdo1ek-marytmnvs-projects.vercel.app/',
     credentials: true,
   },
 })

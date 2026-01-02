@@ -10,8 +10,17 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+   origin: [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'https://help-mate-3j1hdo1ek-marytmnvs-projects.vercel.app/',
+      'https://helpmate.vercel.app',
+      process.env.FRONTEND_URL, 
+    ].filter(Boolean),
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+
   });
 
   // Global prefix
@@ -52,10 +61,6 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
-  console.log(`💬 WebSocket chat: ws://localhost:${port}/chat`);
 }
 
 bootstrap();
