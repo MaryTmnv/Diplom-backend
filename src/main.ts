@@ -14,6 +14,7 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:5173',
       'https://help-mate-3j1hdo1ek-marytmnvs-projects.vercel.app/',
+      'https://help-mate-nzq4q5gyb-marytmnvs-projects.vercel.app/',
       'https://helpmate.vercel.app',
       process.env.FRONTEND_URL, 
     ].filter(Boolean),
