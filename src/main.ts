@@ -16,7 +16,7 @@ async function bootstrap() {
       'https://help-mate-3j1hdo1ek-marytmnvs-projects.vercel.app',
       'https://help-mate-nzq4q5gyb-marytmnvs-projects.vercel.app',
       'https://helpmate.vercel.app',
-      'https://help-mate-msz2m019w-marytmnvs-projects.vercel.app/',
+      'https://help-mate-msz2m019w-marytmnvs-projects.vercel.app',
       process.env.FRONTEND_URL, 
     ].filter(Boolean),
     credentials: true,
