@@ -1,4 +1,3 @@
-// src/modules/auth/auth.service.ts
 import {
   Injectable,
   ConflictException,

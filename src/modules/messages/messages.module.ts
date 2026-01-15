@@ -3,11 +3,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MessagesService } from './messages.service';
 import { MessagesController } from './messages.controller';
-import { NotificationsModule } from '../notifications/notifications.module';
+import { DatabaseModule } from '../database/database.module';
 import { MessagesGateway } from './messages/messages.gateway';
 
 @Module({
   imports: [
+    DatabaseModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -18,7 +19,6 @@ import { MessagesGateway } from './messages/messages.gateway';
       }),
       inject: [ConfigService],
     }),
-    forwardRef(() => NotificationsModule), // Используем forwardRef
   ],
   controllers: [MessagesController],
   providers: [MessagesService, MessagesGateway],
